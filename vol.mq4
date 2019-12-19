@@ -1,9 +1,9 @@
 //+------------------------------------------------------------------+
 //|                                                         test.mq4 |
-//|                                                     |
+//|                                                     |gc
 //|                                                                  |
 //+------------------------------------------------------------------+
-#property copyright "Graham Cleven"
+#property copyright "gc"
 #property link      ""
 #property version   "1.00"
 #property strict
