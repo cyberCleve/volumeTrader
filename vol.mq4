@@ -1,22 +1,15 @@
 //+------------------------------------------------------------------+
 //|                                                         test.mq4 |
-//|                                                     |gc
+//|                                                    Graham Cleven |
 //|                                                                  |
 //+------------------------------------------------------------------+
-#property copyright "gc"
+#property copyright "Graham Cleven"
 #property link      ""
 #property version   "1.00"
 #property strict
 //--- input parameters
 input int      Input1=1;
-input int      Input2=1;
-input int      Input3=1;
 
-// initialze globals for volume
-int volSum = 0;
-int volMean = 0;
-int barCount = 0;
-int volHist[];
    
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -24,20 +17,6 @@ int volHist[];
 int OnInit()
 {
 //---
-// Print(Bars);
-
-  
-   // get sum of previous bars
-   
-   for(int i=0; i < Bars; i++) {
-      volSum += Volume[i];
-      volHist += Volume[i]
-      // OrderSend(Symbol(), OP_BUY, 1, Ask, 3, 0,0,"","TEST",0,Red);
-   }
-
-   barCount = Bars;
-   
-   volMean = volSum / Bars;
 
 //---
    return(INIT_SUCCEEDED);
@@ -54,35 +33,90 @@ void OnDeinit(const int reason)
 }
 
 
-int StdDeviation() {
-   for(int i=0; i < length(barCount)
-   return 0;
-}
-
-
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
+
+int stdDev(string symbol) {
+   
+   // init
+   int volumes[1440];
+   // int sqrdVolumes[1440];
+   int sqrdSum = 0;
+   int stdDev = 0;
+   int sum = 0;
+   int mean = 0;
+
+   // compute mean
+   for (int i = 0; i < 1440; i++) {
+      volumes[i] = iVolume(symbol, PERIOD_M1, i);
+      sum += volumes[i];
+   }
+   
+   mean = sum / 1440;
+   
+   // for each value, subtract mean and square result
+   for (int i = 0; i < 1440; i++) {
+      sqrdSum += (volumes[i] - mean)^2;
+   }
+   
+   // sqrt of mean of sqrd volumes
+   stdDev = sqrt(sqrdSum / 1400);
+   
+   // 2 stddeviations above mean
+   return mean + (stdDev * 2);
+
+}
+
 void OnTick()
 {
 //---
+   // initialze globals for volume
+   string insturments[2] = {"USD/JPY", "EUR/USD"};
 
-   // find if new bar has closed
-   if (Bars > barCount) {
-      barCount++;
+   for (int i = 0; i < ArraySize(insturments); i++) {
+   
+      Print(insturments[i]);
+   
+      // check if postion is already open in security 
+      bool open = 0;
+      for(int order_counter = 0; order_counter < OrdersTotal(); order_counter++)
+      {
+         if (OrderSelect(order_counter, SELECT_BY_POS, MODE_TRADES) == true && OrderSymbol() == insturments[i])
+         {
+            open = 1; 
+         
+     
+         }
       
-      // add latest full bar to mean and list
-      volSum += Volume[0];
-      volHist += Volume[0];
+      // position already open
+      if (open) {
+         break;
+      }
+   
+      // compute outlier cutoff of volume on M1
+      cutoff = stdDev(insturments[i]);
       
-      // get new mean and new stdevi
-      volMean = volSum / barCount;
-      volStd = StdDeviation();
+      // determine if last 10 bars incl. current are outliers 
+      for (int bar = 0; bar < 10; bar++) {
+         if (iVolume(insturments[i], PERIOD_M1, bar) >= cutoff){
+             // compute R^2 for last 10 ticks 
       
+            // check spread?
+            
+            // Compute SL and TP as % move
+            
+            // place order
+         }
+      }
+      
+     
+   
    }
-
    
    return;
+
+}
 
 }
 //+------------------------------------------------------------------+
